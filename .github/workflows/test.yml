@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: 
       - 'prod*'
-    types: [synchronize, opened, reopened, edited]
+    types: [synchronize, opened, reopened, edited, closed]
 
 jobs:
   tag-for-report:
