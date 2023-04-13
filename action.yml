@@ -1,11 +1,11 @@
-name: 'cherry-picker'
-description: 'Cherry pick last commit from target branch, and create a new PR on development branch'
-author: 'sincro-solutions'
+name: 'Your name here'
+description: 'Provide a description here'
+author: 'Your name or organization here'
 inputs:
-  repo-token:
-    description: 'The GitHub token used to manage labels'
-    required: false
-    default: ${{ github.token }}
+  milliseconds: # change this
+    required: true
+    description: 'input description here'
+    default: 'default value if applicable'
 runs:
   using: 'node16'
   main: 'dist/index.js'
