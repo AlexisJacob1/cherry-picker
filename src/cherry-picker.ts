@@ -49,7 +49,7 @@ export class CherryPicker {
 			})
 			.catch((error) => {
 				throw new Error(error);
-			})
+			});
 		})
 		.catch((error) => {
 			throw new Error(error);
