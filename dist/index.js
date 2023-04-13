@@ -43,8 +43,6 @@ class CherryPicker {
     }
     cherryPickLastCommitAndReportToDevelop() {
         var _a;
-        console.log("Context payload");
-        console.log(JSON.stringify(github.context.payload.pull_request, undefined, 4));
         const pullRequestNumber = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
         if (pullRequestNumber === undefined) {
             throw new Error("No pull request number");
@@ -67,10 +65,19 @@ class CherryPicker {
                 repo: github.context.repo.repo,
                 base: repo.data.default_branch,
                 head: pullRequest.data.head.label,
-                title: `[REPORT] Report ${pullRequest.data.id} to ${repo.data.default_branch}`
+                title: `[REPORT] Report ${pullRequest.data.number} to ${repo.data.default_branch}`
             })
                 .then((createdPullRequest) => {
-                console.log(`New pull request created: ${createdPullRequest.data.id}`);
+                this.client.rest.issues.addLabels({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    issue_number: createdPullRequest.data.number,
+                    labels: ['report-to-develop']
+                }).then(() => {
+                })
+                    .catch((err) => {
+                    throw new Error(err);
+                });
             })
                 .catch((error) => {
                 throw new Error(error);
