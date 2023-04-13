@@ -42,8 +42,9 @@ class CherryPicker {
         this.client = github.getOctokit(token);
     }
     cherryPickLastCommitAndReportToDevelop() {
+        var _a;
         console.log("Context payload");
-        console.log(JSON.stringify(github.context.payload, undefined, 4));
+        console.log(JSON.stringify((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.merged, undefined, 4));
     }
 }
 exports.CherryPicker = CherryPicker;
