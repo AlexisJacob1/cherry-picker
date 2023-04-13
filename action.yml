@@ -1,4 +1,4 @@
-name: 'cherry-picker'
+name: 'sincro-dev-reporter'
 description: 'Cherry pick last commit from target branch, and create a new PR on development branch'
 author: 'sincro-solutions'
 inputs:
