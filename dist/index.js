@@ -43,7 +43,7 @@ class CherryPicker {
     }
     cherryPickLastCommitAndReportToDevelop() {
         console.log("Context payload");
-        console.log(JSON.stringify(github.context.payload.pull_request, undefined, 4));
+        console.log(JSON.stringify(github.context.payload, undefined, 4));
     }
 }
 exports.CherryPicker = CherryPicker;
