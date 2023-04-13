@@ -1,0 +1,12 @@
+name: 'check-branches'
+on: push
+
+jobs:
+  tag-for-report:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
