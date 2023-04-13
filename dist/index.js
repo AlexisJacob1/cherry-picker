@@ -44,7 +44,22 @@ class CherryPicker {
     cherryPickLastCommitAndReportToDevelop() {
         var _a;
         console.log("Context payload");
-        console.log(JSON.stringify((_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.merged, undefined, 4));
+        console.log(JSON.stringify(github.context.payload.pull_request, undefined, 4));
+        const pullRequestNumber = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+        if (pullRequestNumber === undefined) {
+            throw new Error("No pull request number");
+        }
+        this.client.rest.pulls.get({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            pull_number: pullRequestNumber
+        })
+            .then((pullRequest) => {
+            console.log(pullRequest.data.merge_commit_sha);
+        })
+            .catch((error) => {
+            throw new Error(error);
+        });
     }
 }
 exports.CherryPicker = CherryPicker;
