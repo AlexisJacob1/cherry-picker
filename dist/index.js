@@ -72,8 +72,9 @@ class CherryPicker {
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     issue_number: createdPullRequest.data.number,
-                    labels: ['report-to-develop']
+                    labels: ['report-from-prod']
                 }).then(() => {
+                    console.log(`Pull request ${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
                 })
                     .catch((err) => {
                     throw new Error(err);
