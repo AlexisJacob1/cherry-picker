@@ -65,7 +65,8 @@ class CherryPicker {
                 repo: github.context.repo.repo,
                 base: repo.data.default_branch,
                 head: pullRequest.data.head.label,
-                title: `[REPORT] Report ${pullRequest.data.number} to ${repo.data.default_branch}`
+                title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
+                body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
             })
                 .then((createdPullRequest) => {
                 this.client.rest.issues.addLabels({
