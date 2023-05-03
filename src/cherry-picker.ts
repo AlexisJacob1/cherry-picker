@@ -74,23 +74,26 @@ export class CherryPicker {
 	
 	private createNewBranchForCherryPick(baseBranch: string, commitSha: string, branchName: string): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
-			
-			console.log(`Fetching branches`);
-			execSync(`git fetch --all`);
-			
-			console.log(`Checking out base branch`);
-			execSync(`git checkout ${baseBranch}`);
-			
-			console.log(`Creating new branch ${branchName}`);
-			execSync(`git checkout ${branchName}`);
-			
-			console.log(`Cherry picking ${commitSha}`);
-			execSync(`git cherry-pick ${commitSha}`);
-			
-			console.log(`Pushing ${branchName} to remote`);
-			execSync(`git push --set-upstream origin ${branchName}`);
-			
-			resolve();
+			try {
+				core.info(`Fetching branches`);
+				execSync(`git fetch --all`);
+				
+				core.info(`Checking out base branch`);
+				execSync(`git checkout ${baseBranch}`);
+				
+				core.info(`Creating new branch ${branchName}`);
+				execSync(`git checkout ${branchName}`);
+				
+				core.info(`Cherry picking ${commitSha}`);
+				execSync(`git cherry-pick ${commitSha}`);
+				
+				core.info(`Pushing ${branchName} to remote`);
+				execSync(`git push --set-upstream origin ${branchName}`);
+				
+				resolve();	
+			} catch (error) {
+				reject(error)
+			}
 		})
 	}
 }
