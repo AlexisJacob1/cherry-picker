@@ -99,17 +99,22 @@ class CherryPicker {
     }
     createNewBranchForCherryPick(baseBranch, commitSha, branchName) {
         return new Promise((resolve, reject) => {
-            console.log(`Fetching branches`);
-            (0, child_process_1.execSync)(`git fetch --all`);
-            console.log(`Checking out base branch`);
-            (0, child_process_1.execSync)(`git checkout ${baseBranch}`);
-            console.log(`Creating new branch ${branchName}`);
-            (0, child_process_1.execSync)(`git checkout ${branchName}`);
-            console.log(`Cherry picking ${commitSha}`);
-            (0, child_process_1.execSync)(`git cherry-pick ${commitSha}`);
-            console.log(`Pushing ${branchName} to remote`);
-            (0, child_process_1.execSync)(`git push --set-upstream origin ${branchName}`);
-            resolve();
+            try {
+                core.info(`Fetching branches`);
+                (0, child_process_1.execSync)(`git fetch --all`);
+                core.info(`Checking out base branch`);
+                (0, child_process_1.execSync)(`git checkout ${baseBranch}`);
+                core.info(`Creating new branch ${branchName}`);
+                (0, child_process_1.execSync)(`git checkout ${branchName}`);
+                core.info(`Cherry picking ${commitSha}`);
+                (0, child_process_1.execSync)(`git cherry-pick ${commitSha}`);
+                core.info(`Pushing ${branchName} to remote`);
+                (0, child_process_1.execSync)(`git push --set-upstream origin ${branchName}`);
+                resolve();
+            }
+            catch (error) {
+                reject(error);
+            }
         });
     }
 }
