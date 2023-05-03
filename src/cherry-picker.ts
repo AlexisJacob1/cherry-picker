@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { execSync } from 'child_process';
 
 export class CherryPicker {
 	
@@ -21,7 +22,7 @@ export class CherryPicker {
 		}
 
 		Promise.all([
-			this.client.rest.pulls.get({			
+			this.client.rest.pulls.get({
 				owner: github.context.repo.owner,
 				repo: github.context.repo.repo,
 				pull_number: pullRequestNumber
@@ -34,11 +35,14 @@ export class CherryPicker {
 		.then((response) => {
 			const [pullRequest, repo] = response;
 
+			const branchName = `cherry-pick_${pullRequestNumber}`;
+			this.createNewBranchForCherryPick(repo.data.default_branch, pullRequest.data.head.sha, branchName);
+
 			this.client.rest.pulls.create({
 				owner: github.context.repo.owner,
 				repo: github.context.repo.repo,
 				base: repo.data.default_branch,
-				head: pullRequest.data.head.label,
+				head: branchName,
 				title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
 				body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
 			})
@@ -62,5 +66,27 @@ export class CherryPicker {
 		.catch((error) => {
 			throw new Error(error);
 		});
+	}
+
+	private createNewBranchForCherryPick(baseBranch: string, commitSha: string, branchName: string): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			
+			core.info(`Fetching branches`);
+			execSync(`git fetch --all`);
+
+			core.info(`Checking out base branch`);
+			execSync(`git checkout ${baseBranch}`);
+
+			core.info(`Creating new branch ${branchName}`);
+			execSync(`git checkout ${branchName}`);
+			
+			core.info(`Cherry picking ${commitSha}`);
+			execSync(`git cherry-pick ${commitSha}`);
+			
+			core.info(`Pushing ${branchName} to remote`);
+			execSync(`git push --set-upstream origin ${branchName}`);
+
+			resolve();
+		})
 	}
 }
