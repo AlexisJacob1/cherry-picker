@@ -105,7 +105,7 @@ class CherryPicker {
                 core.info(`Checking out base branch`);
                 (0, child_process_1.execSync)(`git checkout ${baseBranch}`);
                 core.info(`Creating new branch ${branchName}`);
-                (0, child_process_1.execSync)(`git checkout ${branchName}`);
+                (0, child_process_1.execSync)(`git checkout -b ${branchName}`);
                 core.info(`Cherry picking ${commitSha}`);
                 (0, child_process_1.execSync)(`git cherry-pick ${commitSha}`);
                 core.info(`Pushing ${branchName} to remote`);

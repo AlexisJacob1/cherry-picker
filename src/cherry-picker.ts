@@ -82,7 +82,7 @@ export class CherryPicker {
 				execSync(`git checkout ${baseBranch}`);
 				
 				core.info(`Creating new branch ${branchName}`);
-				execSync(`git checkout ${branchName}`);
+				execSync(`git checkout -b ${branchName}`);
 				
 				core.info(`Cherry picking ${commitSha}`);
 				execSync(`git cherry-pick ${commitSha}`);
