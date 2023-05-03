@@ -33,6 +33,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CherryPicker = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const child_process_1 = __nccwpck_require__(3129);
 class CherryPicker {
     constructor() {
         const token = core.getInput('repo-token');
@@ -60,25 +61,32 @@ class CherryPicker {
         ])
             .then((response) => {
             const [pullRequest, repo] = response;
-            this.client.rest.pulls.create({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                base: repo.data.default_branch,
-                head: pullRequest.data.head.label,
-                title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
-                body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
-            })
-                .then((createdPullRequest) => {
-                this.client.rest.issues.addLabels({
+            const branchName = `cherry-pick_${pullRequestNumber}`;
+            this.createNewBranchForCherryPick(repo.data.default_branch, pullRequest.data.head.sha, branchName)
+                .then(() => {
+                this.client.rest.pulls.create({
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
-                    issue_number: createdPullRequest.data.number,
-                    labels: ['report-from-prod']
-                }).then(() => {
-                    console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
+                    base: repo.data.default_branch,
+                    head: branchName,
+                    title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
+                    body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
                 })
-                    .catch((err) => {
-                    throw new Error(err);
+                    .then((createdPullRequest) => {
+                    this.client.rest.issues.addLabels({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        issue_number: createdPullRequest.data.number,
+                        labels: ['report-from-prod']
+                    }).then(() => {
+                        console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
+                    })
+                        .catch((err) => {
+                        throw new Error(err);
+                    });
+                })
+                    .catch((error) => {
+                    throw new Error(error);
                 });
             })
                 .catch((error) => {
@@ -87,6 +95,21 @@ class CherryPicker {
         })
             .catch((error) => {
             throw new Error(error);
+        });
+    }
+    createNewBranchForCherryPick(baseBranch, commitSha, branchName) {
+        return new Promise((resolve, reject) => {
+            console.log(`Fetching branches`);
+            (0, child_process_1.execSync)(`git fetch --all`);
+            console.log(`Checking out base branch`);
+            (0, child_process_1.execSync)(`git checkout ${baseBranch}`);
+            console.log(`Creating new branch ${branchName}`);
+            (0, child_process_1.execSync)(`git checkout ${branchName}`);
+            console.log(`Cherry picking ${commitSha}`);
+            (0, child_process_1.execSync)(`git cherry-pick ${commitSha}`);
+            console.log(`Pushing ${branchName} to remote`);
+            (0, child_process_1.execSync)(`git push --set-upstream origin ${branchName}`);
+            resolve();
         });
     }
 }
@@ -9774,6 +9797,14 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 
 "use strict";
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 3129:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("child_process");
 
 /***/ }),
 
