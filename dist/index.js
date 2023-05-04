@@ -105,13 +105,13 @@ class CherryPicker {
         if ((0, fs_1.existsSync)("./CODEOWNERS")) {
             const fileContent = (0, fs_1.readFileSync)("./CODEOWNERS", 'utf-8');
             fileContent.split(/\r?\n/).forEach(line => {
-                message.push(line.trim());
+                message.push(`@${line.trim()}`);
             });
         }
         else {
             core.info("No CODEOWNERS file found. Skipping...");
         }
-        message.push(github.context.actor);
+        message.push(`@${github.context.actor}`);
         return message.join("\r\n");
     }
 }
