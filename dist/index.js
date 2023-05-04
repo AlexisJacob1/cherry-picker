@@ -86,22 +86,6 @@ class CherryPicker {
                 ])
                     .then(() => {
                     console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
-                })
-                    .then((createdPullRequest) => {
-                    this.client.rest.issues.addLabels({
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        issue_number: createdPullRequest.data.number,
-                        labels: ['report-from-prod']
-                    }).then(() => {
-                        console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
-                    })
-                        .catch((err) => {
-                        throw new Error(err);
-                    });
-                })
-                    .catch((error) => {
-                    throw new Error(error);
                 });
             })
                 .catch((error) => {
@@ -9815,14 +9799,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 
 "use strict";
 module.exports = require("assert");
-
-/***/ }),
-
-/***/ 3129:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("child_process");
 
 /***/ }),
 

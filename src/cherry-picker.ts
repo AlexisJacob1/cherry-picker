@@ -44,7 +44,6 @@ export class CherryPicker {
 				body: this.getPullRequestBody(pullRequest.data.number, repo.data.default_branch)
 			})
 			.then((createdPullRequest) => {
-
 				Promise.all([
 					this.client.rest.issues.addLabels({
 						owner: github.context.repo.owner,
@@ -59,26 +58,9 @@ export class CherryPicker {
 						assignees: [github.context.actor]
 					}),
 				])
-
 				.then(() => {
 					console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
-				})
-				.then((createdPullRequest) => {
-					this.client.rest.issues.addLabels({
-						owner: github.context.repo.owner,
-						repo: github.context.repo.repo,
-						issue_number: createdPullRequest.data.number,
-						labels: ['report-from-prod']
-					}).then(() => {
-						console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
-					})
-					.catch((err) => {
-						throw new Error(err);
-					})
-				})
-				.catch((error) => {
-					throw new Error(error);
-				});	
+				});
 			})
 			.catch((error) => {
 				throw new Error(error);
