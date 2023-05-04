@@ -33,7 +33,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CherryPicker = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const child_process_1 = __nccwpck_require__(3129);
+const fs_1 = __nccwpck_require__(5747);
 class CherryPicker {
     constructor() {
         const token = core.getInput('repo-token');
@@ -61,16 +61,31 @@ class CherryPicker {
         ])
             .then((response) => {
             const [pullRequest, repo] = response;
-            const branchName = `cherry-pick_${pullRequestNumber}`;
-            this.createNewBranchForCherryPick(repo.data.default_branch, pullRequest.data.head.sha, branchName)
-                .then(() => {
-                this.client.rest.pulls.create({
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    base: repo.data.default_branch,
-                    head: branchName,
-                    title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
-                    body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
+            this.client.rest.pulls.create({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                base: repo.data.default_branch,
+                head: pullRequest.data.head.label,
+                title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
+                body: this.getPullRequestBody(pullRequest.data.number, repo.data.default_branch)
+            })
+                .then((createdPullRequest) => {
+                Promise.all([
+                    this.client.rest.issues.addLabels({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        issue_number: createdPullRequest.data.number,
+                        labels: ['report-from-prod']
+                    }),
+                    this.client.rest.issues.addAssignees({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        issue_number: createdPullRequest.data.number,
+                        assignees: [github.context.actor]
+                    }),
+                ])
+                    .then(() => {
+                    console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
                 })
                     .then((createdPullRequest) => {
                     this.client.rest.issues.addLabels({
@@ -97,25 +112,23 @@ class CherryPicker {
             throw new Error(error);
         });
     }
-    createNewBranchForCherryPick(baseBranch, commitSha, branchName) {
-        return new Promise((resolve, reject) => {
-            try {
-                core.info(`Fetching branches`);
-                (0, child_process_1.execSync)(`git fetch --all`);
-                core.info(`Checking out base branch`);
-                (0, child_process_1.execSync)(`git checkout ${baseBranch}`);
-                core.info(`Creating new branch ${branchName}`);
-                (0, child_process_1.execSync)(`git checkout -b ${branchName}`);
-                core.info(`Cherry picking ${commitSha}`);
-                (0, child_process_1.execSync)(`git cherry-pick ${commitSha}`);
-                core.info(`Pushing ${branchName} to remote`);
-                (0, child_process_1.execSync)(`git push --set-upstream origin ${branchName}`);
-                resolve();
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
+    getPullRequestBody(initialPullRequestNumber, defaultBranchName) {
+        const message = [
+            `This is a pull request that was created to report #${initialPullRequestNumber} on ${defaultBranchName}`,
+            "You might need to rebase the pulled branch before merging it"
+        ];
+        console.log((0, fs_1.readdirSync)("./"));
+        if ((0, fs_1.existsSync)("./CODEOWNERS")) {
+            const fileContent = (0, fs_1.readFileSync)("./CODEOWNERS", 'utf-8');
+            fileContent.split(/\r?\n/).forEach(line => {
+                message.push(line.trim());
+            });
+        }
+        else {
+            core.info("No CODEOWNERS file found. Skipping...");
+        }
+        message.push(github.context.actor);
+        return message.join("\r\n");
     }
 }
 exports.CherryPicker = CherryPicker;
