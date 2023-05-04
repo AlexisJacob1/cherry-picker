@@ -59,7 +59,7 @@ export class CherryPicker {
 					}),
 				])
 				.then(() => {
-					console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
+					console.log(`Pull request ${pullRequest.data.title} (#${createdPullRequest.data.number}) created successfully`);
 				});
 			})
 			.catch((error) => {
@@ -81,7 +81,7 @@ export class CherryPicker {
 		if (existsSync("./CODEOWNERS")) {
 			const fileContent = readFileSync("./CODEOWNERS", 'utf-8');
 			fileContent.split(/\r?\n/).forEach(line =>  {
-				message.push(`@${line.trim()}`);
+				message.push(line.trim());
 			});
 		} else {
 			core.info("No CODEOWNERS file found. Skipping...");
