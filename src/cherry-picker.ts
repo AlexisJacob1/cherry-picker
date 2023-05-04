@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { execSync } from 'child_process';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 
 export class CherryPicker {
 	
@@ -34,17 +34,34 @@ export class CherryPicker {
 		])
 		.then((response) => {
 			const [pullRequest, repo] = response;
-			
-			const branchName = `cherry-pick_${pullRequestNumber}`;
-			this.createNewBranchForCherryPick(repo.data.default_branch, pullRequest.data.head.sha, branchName)
-			.then(() => {
-				this.client.rest.pulls.create({
-					owner: github.context.repo.owner,
-					repo: github.context.repo.repo,
-					base: repo.data.default_branch,
-					head: branchName,
-					title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
-					body: `This is a pull request that was created to report #${pullRequest.data.number} on ${repo.data.default_branch}`
+
+			this.client.rest.pulls.create({
+				owner: github.context.repo.owner,
+				repo: github.context.repo.repo,
+				base: repo.data.default_branch,
+				head: pullRequest.data.head.label,
+				title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
+				body: this.getPullRequestBody(pullRequest.data.number, repo.data.default_branch)
+			})
+			.then((createdPullRequest) => {
+
+				Promise.all([
+					this.client.rest.issues.addLabels({
+						owner: github.context.repo.owner,
+						repo: github.context.repo.repo,
+						issue_number: createdPullRequest.data.number,
+						labels: ['report-from-prod']
+					}),
+					this.client.rest.issues.addAssignees({
+						owner: github.context.repo.owner,
+						repo: github.context.repo.repo,
+						issue_number: createdPullRequest.data.number,
+						assignees: [github.context.actor]
+					}),
+				])
+
+				.then(() => {
+					console.log(`Pull request #${pullRequest.data.labels} (${createdPullRequest.data.number}) created successfully`);
 				})
 				.then((createdPullRequest) => {
 					this.client.rest.issues.addLabels({
@@ -71,29 +88,25 @@ export class CherryPicker {
 			throw new Error(error);
 		});
 	}
-	
-	private createNewBranchForCherryPick(baseBranch: string, commitSha: string, branchName: string): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			try {
-				core.info(`Fetching branches`);
-				execSync(`git fetch --all`);
-				
-				core.info(`Checking out base branch`);
-				execSync(`git checkout ${baseBranch}`);
-				
-				core.info(`Creating new branch ${branchName}`);
-				execSync(`git checkout -b ${branchName}`);
-				
-				core.info(`Cherry picking ${commitSha}`);
-				execSync(`git cherry-pick ${commitSha}`);
-				
-				core.info(`Pushing ${branchName} to remote`);
-				execSync(`git push --set-upstream origin ${branchName}`);
-				
-				resolve();	
-			} catch (error) {
-				reject(error)
-			}
-		})
+
+	private getPullRequestBody(initialPullRequestNumber: number, defaultBranchName: string): string {
+		const message: string[] = [
+			`This is a pull request that was created to report #${initialPullRequestNumber} on ${defaultBranchName}`,
+			"You might need to rebase the pulled branch before merging it"
+		];
+
+		console.log(readdirSync("./"));
+		if (existsSync("./CODEOWNERS")) {
+			const fileContent = readFileSync("./CODEOWNERS", 'utf-8');
+			fileContent.split(/\r?\n/).forEach(line =>  {
+				message.push(line.trim());
+			});
+		} else {
+			core.info("No CODEOWNERS file found. Skipping...");
+		}
+
+		message.push(github.context.actor);
+
+		return message.join("\r\n")
 	}
 }
