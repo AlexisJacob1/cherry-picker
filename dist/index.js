@@ -29,6 +29,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CherryPicker = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -44,56 +53,41 @@ class CherryPicker {
     }
     cherryPickLastCommitAndReportToDevelop() {
         var _a;
-        const pullRequestNumber = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
-        if (pullRequestNumber === undefined) {
-            throw new Error("No pull request number");
-        }
-        Promise.all([
-            this.client.rest.pulls.get({
+        return __awaiter(this, void 0, void 0, function* () {
+            const pullRequestNumber = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+            if (pullRequestNumber === undefined) {
+                throw new Error("No pull request number");
+            }
+            const pullRequest = yield this.client.rest.pulls.get({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 pull_number: pullRequestNumber
-            }),
-            this.client.rest.repos.get({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-            })
-        ])
-            .then((response) => {
-            const [pullRequest, repo] = response;
-            this.client.rest.pulls.create({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                base: repo.data.default_branch,
-                head: pullRequest.data.head.label,
-                title: `Report #${pullRequest.data.number} to ${repo.data.default_branch}`,
-                body: this.getPullRequestBody(pullRequest.data.number, repo.data.default_branch)
-            })
-                .then((createdPullRequest) => {
-                Promise.all([
-                    this.client.rest.issues.addLabels({
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        issue_number: createdPullRequest.data.number,
-                        labels: ['report-from-prod']
-                    }),
-                    this.client.rest.issues.addAssignees({
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        issue_number: createdPullRequest.data.number,
-                        assignees: [github.context.actor]
-                    }),
-                ])
-                    .then(() => {
-                    console.log(`Pull request ${pullRequest.data.title} (#${createdPullRequest.data.number}) created successfully`);
-                });
-            })
-                .catch((error) => {
-                throw new Error(error);
             });
-        })
-            .catch((error) => {
-            throw new Error(error);
+            const repository = yield this.client.rest.repos.get({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+            });
+            const createdPullRequest = yield this.client.rest.pulls.create({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                base: repository.data.default_branch,
+                head: pullRequest.data.head.label,
+                title: `Report #${pullRequest.data.number} to ${repository.data.default_branch}`,
+                body: this.getPullRequestBody(pullRequest.data.number, repository.data.default_branch)
+            });
+            yield this.client.rest.issues.addLabels({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: createdPullRequest.data.number,
+                labels: ['report-from-prod']
+            });
+            yield this.client.rest.issues.addAssignees({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: createdPullRequest.data.number,
+                assignees: [github.context.actor]
+            });
+            core.info(`Pull request ${pullRequest.data.title} (#${createdPullRequest.data.number}) created successfully`);
         });
     }
     getPullRequestBody(initialPullRequestNumber, defaultBranchName) {

@@ -11,7 +11,7 @@ async function run(): Promise<void> {
 		// core.debug(new Date().toTimeString())
 		
 		// core.setOutput('time', new Date().toTimeString())
-		new CherryPicker().cherryPickLastCommitAndReportToDevelop();
+		await new CherryPicker().cherryPickLastCommitAndReportToDevelop();
 	} catch (error) {
 		if (error instanceof Error) core.setFailed(error.message)
 	}
