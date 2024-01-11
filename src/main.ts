@@ -1,5 +1,5 @@
-import * as core from '@actions/core'
-import {CherryPicker} from './cherry-picker'
+import * as core from '@actions/core';
+import {CherryPicker} from './cherry-picker';
 
 async function run(): Promise<void> {
 	try {
@@ -11,10 +11,10 @@ async function run(): Promise<void> {
 		// core.debug(new Date().toTimeString())
 
 		// core.setOutput('time', new Date().toTimeString())
-		await new CherryPicker().cherryPickLastCommitAndReportToDevelop()
+		await new CherryPicker().cherryPickLastCommitAndReportToDevelop();
 	} catch (error) {
-		if (error instanceof Error) core.setFailed(error.message)
+		if (error instanceof Error) core.setFailed(error.message);
 	}
 }
 
-run()
+run();
