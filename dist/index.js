@@ -30840,6 +30840,7 @@ class CherryPicker {
             repo: github.context.repo.repo
         });
         console.log('Repository fetched successfully');
+        console.log('Fetched pull request content', pullRequest);
         const createdPullRequest = await this.client.rest.pulls.create({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
